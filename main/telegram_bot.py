@@ -1,5 +1,6 @@
 import telebot
 import random
+from telebot import types
 
 
 bot = telebot.TeleBot('2087685317:AAHWV1cRC0jiFKDr0D_5hfxtndHX1rUe_uM')
@@ -25,35 +26,58 @@ third = ["Злые языки могут говорить вам обратно�
          "Не нужно бояться одиноких встреч — сегодня то самое время, когда они значат многое.",
          "Если встретите незнакомца на пути — проявите участие, и тогда эта встреча посулит вам приятные хлопоты."]
 
-print("1 — Овен")
-print("2 — Телец")
-print("3 — Близнецы")
-print("4 — Рак")
-print("5 — Лев")
-print("6 — Дева")
-print("7 — Весы")
-print("8 — Скорпион")
-print("9 — Стрелец")
-print("10 — Козерог")
-print("11 — Водолей")
-print("12 — Рыбы")
-
-zodiac = int(
-    input("{blue}Введите число с номером знака зодиака: {endcolor}".format(blue="\033[96m", endcolor="\033[0m")))
-if 0 < zodiac < 13:
-    print(random.choice(first), random.choice(second), random.choice(second_add), random.choice(third))
-else:
-    print("Вы ошиблись с номером! Запуситите программу ещё раз")
-
 
 @bot.message_handler(content_types=['text'])
-def get_text_message(message):
-    if message.text.lower == "привет":
-        bot.send_message(message.from_user_id, "Привет! Сейчас я расскажу тебе гороскоп на сегодня!")
+def get_text_messages(message):
+    # Если написали «Привет»
+    if message.text.lower() == "привет":
+        # Пишем приветствие
+        bot.send_message(message.from_user.id, "Привет, сейчас я расскажу тебе гороскоп на сегодня.")
+        # Готовим кнопки
+        keyboard = types.InlineKeyboardMarkup()
+        # По очереди готовим текст и обработчик для каждого знака зодиака
+        key_oven = types.InlineKeyboardButton(text='Овен', callback_data='zodiac')
+        # И добавляем кнопку на экран
+        keyboard.add(key_oven)
+        key_telec = types.InlineKeyboardButton(text='Телец', callback_data='zodiac')
+        keyboard.add(key_telec)
+        key_bliznecy = types.InlineKeyboardButton(text='Близнецы', callback_data='zodiac')
+        keyboard.add(key_bliznecy)
+        key_rak = types.InlineKeyboardButton(text='Рак', callback_data='zodiac')
+        keyboard.add(key_rak)
+        key_lev = types.InlineKeyboardButton(text='Лев', callback_data='zodiac')
+        keyboard.add(key_lev)
+        key_deva = types.InlineKeyboardButton(text='Дева', callback_data='zodiac')
+        keyboard.add(key_deva)
+        key_vesy = types.InlineKeyboardButton(text='Весы', callback_data='zodiac')
+        keyboard.add(key_vesy)
+        key_scorpion = types.InlineKeyboardButton(text='Скорпион', callback_data='zodiac')
+        keyboard.add(key_scorpion)
+        key_strelec = types.InlineKeyboardButton(text='Стрелец', callback_data='zodiac')
+        keyboard.add(key_strelec)
+        key_kozerog = types.InlineKeyboardButton(text='Козерог', callback_data='zodiac')
+        keyboard.add(key_kozerog)
+        key_vodoley = types.InlineKeyboardButton(text='Водолей', callback_data='zodiac')
+        keyboard.add(key_vodoley)
+        key_ryby = types.InlineKeyboardButton(text='Рыбы', callback_data='zodiac')
+        keyboard.add(key_ryby)
+        # Показываем все кнопки сразу и пишем сообщение о выборе
+        bot.send_message(message.from_user.id, text='Выбери свой знак зодиака', reply_markup=keyboard)
     elif message.text == "/help":
-        bot.send_message(message.from_user_id, "Напиши 'привет'")
+        bot.send_message(message.from_user.id, "Напиши Привет")
     else:
-        bot.send_message(message.from_user_id, "Я тебя не понимаю! Напиши '/help'")
+        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call):
+    # Если нажали на одну из 12 кнопок — выводим гороскоп
+    if call.data == "zodiac":
+        # Формируем гороскоп
+        msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(
+            second_add) + ' ' + random.choice(third)
+        # Отправляем текст в Телеграм
+        bot.send_message(call.message.chat.id, msg)
 
 
 bot.polling(none_stop=True, interval=0)
