@@ -43,16 +43,13 @@ def callback_worker(call):
     global array_right
     global array_left
     if call.data == "start_number":
-        array_right = 101
-        array_left = 0
+        reset_array()
         create_field(call)
     elif call.data == "win":
-        array_right = 101
-        array_left = 0
+        reset_array()
         bot.send_message(call.message.chat.id, "Хочешь сыграть заново?", reply_markup=create_keyboard_ys_no())
     elif call.data == "empty":
-        array_right = 101
-        array_left = 0
+        reset_array()
         bot.send_message(call.message.chat.id, "Если захочешь сыграть - просто введи /start")
     elif call.data == "number_l":
         if count < 8:
@@ -88,6 +85,17 @@ def create_keyboard_more_less():
     key_win = types.InlineKeyboardButton(text='Это моё число', callback_data='win')
     keyboard.add(key_win)
     return keyboard
+
+
+def reset_array():
+    global array_right
+    global array_left
+    global count
+    global presented_number
+    array_right = 101
+    array_left = 0
+    count = 0
+    presented_number = []
 
 
 bot.polling(none_stop=True, interval=0)
