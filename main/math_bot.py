@@ -5,30 +5,21 @@ bot = telebot.TeleBot('2087685317:AAHWV1cRC0jiFKDr0D_5hfxtndHX1rUe_uM')
 
 array_left = 0
 array_right = 101
+count = 0
+presented_number = []
 
 
-def get_middle():
-    v = list(range(array_left, array_right, 1))
-    middle_index = int((len(v) - 1) / 2)
-    return v[middle_index]
-
-
-def create_field(call, is_less='='):
-    n = get_middle()
-    keyboard = types.InlineKeyboardMarkup()
-    key_more = types.InlineKeyboardButton(text='Больше', callback_data=f'number_m')
-    keyboard.add(key_more)
-    key_less = types.InlineKeyboardButton(text='Меньше', callback_data=f'number_l')
-    keyboard.add(key_less)
-    key_win = types.InlineKeyboardButton(text='Это моё число', callback_data='win')
-    keyboard.add(key_win)
-    if is_less == '>':
-        global array_left
-        array_left = n
-    elif is_less == '<':
-        global array_right
-        array_right = n
-    bot.send_message(call.message.chat.id, f"Это число {n}?", reply_markup=keyboard)
+def create_field(call):
+    global presented_number
+    n = (array_left + array_right) // 2
+    if n not in presented_number:
+        bot.send_message(call.message.chat.id, f"Это число {n}?", reply_markup=create_keyboard_more_less())
+        global count
+        count += 1
+        presented_number.append(n)
+    else:
+        bot.send_message(call.message.chat.id, f"Число {n} уже было! Ты про него забыл? Хочешь начать заново?",
+                         reply_markup=create_keyboard_ys_no())
 
 
 @bot.message_handler(content_types=['text'])
@@ -41,27 +32,62 @@ def get_text_messages(message):
         bot.send_message(message.from_user.id, text='Запомни число и начинаем играть!', reply_markup=keyboard)
     elif message.text == "/help":
         bot.send_message(message.from_user.id, "Напиши Привет или /start")
+    elif message.text == "/stop":
+        bot.send_message(message.from_user.id, "Если захочешь поиграть - просто напиши /start")
     else:
         bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
+    global array_right
+    global array_left
     if call.data == "start_number":
+        array_right = 101
+        array_left = 0
         create_field(call)
     elif call.data == "win":
-        keyboard = types.InlineKeyboardMarkup()
-        key_start = types.InlineKeyboardButton(text='Да', callback_data='start_number')
-        keyboard.add(key_start)
-        key_finish = types.InlineKeyboardButton(text='Нет', callback_data='empty')
-        keyboard.add(key_finish)
-        bot.send_message(call.message.chat.id, "Хочешь сыграть заново?", reply_markup=keyboard)
+        array_right = 101
+        array_left = 0
+        bot.send_message(call.message.chat.id, "Хочешь сыграть заново?", reply_markup=create_keyboard_ys_no())
     elif call.data == "empty":
+        array_right = 101
+        array_left = 0
         bot.send_message(call.message.chat.id, "Если захочешь сыграть - просто введи /start")
     elif call.data == "number_l":
-        create_field(call, '<')
+        if count < 8:
+            n = (array_left + array_right) // 2
+            array_right = n - 1
+            create_field(call)
+        else:
+            bot.send_message(call.message.chat.id, "Упс, я проиграл")
     elif call.data == "number_m":
-        create_field(call, '>')
+        if count < 8:
+            n = (array_left + array_right) // 2
+            array_left = n + 1
+            create_field(call)
+        else:
+            bot.send_message(call.message.chat.id, "Упс, я проиграл")
+
+
+def create_keyboard_ys_no():
+    keyboard = types.InlineKeyboardMarkup()
+    key_start = types.InlineKeyboardButton(text='Да', callback_data='start_number')
+    keyboard.add(key_start)
+    key_finish = types.InlineKeyboardButton(text='Нет', callback_data='empty')
+    keyboard.add(key_finish)
+    return keyboard
+
+
+def create_keyboard_more_less():
+    keyboard = types.InlineKeyboardMarkup()
+    key_more = types.InlineKeyboardButton(text='Больше', callback_data=f'number_m')
+    keyboard.add(key_more)
+    key_less = types.InlineKeyboardButton(text='Меньше', callback_data=f'number_l')
+    keyboard.add(key_less)
+    key_win = types.InlineKeyboardButton(text='Это моё число', callback_data='win')
+    keyboard.add(key_win)
+    return keyboard
 
 
 bot.polling(none_stop=True, interval=0)
